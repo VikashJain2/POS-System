@@ -1,5 +1,5 @@
 import UserRepository from "../repositories/UserRepository";
-
+import jwt from "jsonwebtoken";
 class UserService {
   constructor() {
     this.userRepository = new UserRepository();
@@ -32,11 +32,44 @@ class UserService {
         throw new AppError("Account is deactivated", 401);
       }
 
-      user.password = undefined
+      user.password = undefined;
       const token = this.generateToken(user);
       return { user, token };
     } catch (error) {
-        throw new AppError(`Login failed: ${error.message}`, 401);
+      throw new AppError(`Login failed: ${error.message}`, 401);
     }
   }
+
+  async generateToken(user) {
+    return jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+        store: user.store,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: process.env.JWT_EXPIRES_IN,
+      }
+    );
+  }
+
+  async getStoreUsers(storeId, role = null) {
+    return await this.userRepository.findByStore(storeId, role);
+  }
+
+  async updateUser(userId, updateData) {
+    if (updateData.password) {
+      delete updateData.password;
+    }
+
+    const user = await this.userRepository.update(userId, updateData);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    user.password = undefined;
+    return user;
+  }
 }
+
+export default UserService;
