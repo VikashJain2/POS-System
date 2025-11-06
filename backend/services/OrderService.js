@@ -1,6 +1,6 @@
 import OrderRepository from "../repositories/OrderRepository.js";
 import InventoryService from "./InventoryService.js";
-import { AppError } from "../utils/errors";
+import { AppError } from "../utils/errors.js";
 class OrderService {
   constructor() {
     this.orderRepository = new OrderRepository();

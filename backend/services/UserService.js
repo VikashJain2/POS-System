@@ -1,4 +1,4 @@
-import UserRepository from "../repositories/UserRepository";
+import UserRepository from "../repositories/UserRepository.js";
 import jwt from "jsonwebtoken";
 class UserService {
   constructor() {
