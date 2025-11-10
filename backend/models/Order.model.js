@@ -16,7 +16,7 @@ const orderItemSchema = new mongoose.Schema({
     min: 0,
   },
   customization: {
-    crust: [String],
+    crust: String,
     toppings: [String],
     extras: [String],
     specialInstructions: String,
@@ -32,7 +32,12 @@ const orderSchema = new mongoose.Schema(
     },
     customer: {
       name: String,
-      phone: String,
+      phone: {
+        type: String,
+        required: function () {
+          return this.orderType === "delivery";
+        },
+      },
       email: String,
       address: {
         street: String,
@@ -54,6 +59,10 @@ const orderSchema = new mongoose.Schema(
       min: 0,
     },
     deliveryFee: {
+      type: Number,
+      default: 0,
+    },
+    discount: {
       type: Number,
       default: 0,
     },
@@ -92,6 +101,16 @@ const orderSchema = new mongoose.Schema(
       enum: ["cash", "card", "online"],
       required: true,
     },
+    paymentDetails: {
+      paymentId: String,
+      razorpayOrderId: String,
+      refundId: String,
+      paymentGateway: {
+        type: String,
+        enum: ["razorpay", "cash"],
+        default: "cash",
+      },
+    },
     store: {
       type: mongoose.Types.ObjectId,
       ref: "Store",
@@ -103,6 +122,15 @@ const orderSchema = new mongoose.Schema(
     },
     estimatedDelivery: Date,
     notes: String,
+    preparationTime: Number,
+    loyaltyPointsEarned: {
+      type: Number,
+      default: 0,
+    },
+    loyaltyPointsRedeemed: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -127,8 +155,23 @@ orderSchema.pre("save", async function (next) {
       .toString()
       .padStart(4, "0")}`;
   }
+
+  if (this.isModified("items") && this.items.length > 0) {
+    const menuItems = await mongoose.model("MenuItem").find({
+      _id: { $in: this.items.map((item) => item.menuItem) },
+    });
+
+    this.preparationTime = this.items.reduce((total, item) => {
+      const menuItem = menuItems.find((mi) => mi._id.equals(item.menuItem));
+
+      return total + (menuItem?.preparationTime || 15) * item.quantity;
+    }, 0);
+  }
   next();
 });
 
+orderSchema.index({ store: 1, status: 1 });
+orderSchema.index({ createdAt: 1 });
+orderSchema.index({ "customer.phone": 1 });
 const OrderModel = mongoose.model("Order", orderSchema);
 export default OrderModel;

@@ -1,5 +1,5 @@
-import StoreModel from "../models/Store.model";
-import BaseRepository from "./BaseRepository";
+import StoreModel from "../models/Store.model.js";
+import BaseRepository from "./BaseRepository.js";
 
 class StoreRepository extends BaseRepository {
   constructor() {

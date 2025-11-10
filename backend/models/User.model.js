@@ -12,11 +12,18 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
+      validate: {
+        validator: function (email) {
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        },
+        message: "Invalid email format",
+      },
     },
     password: {
       type: String,
       required: true,
       minlength: 6,
+      select: false,
     },
     role: {
       type: String,
@@ -43,9 +50,15 @@ const userSchema = new mongoose.Schema(
           "manage_inventory",
           "manage_users",
           "view_reports",
+          "process_payments",
         ],
       },
     ],
+
+    lastLogin: {
+      type: Date,
+    },
+    phone: String,
   },
   {
     timestamps: true,
@@ -63,6 +76,11 @@ userSchema.methods.correctPassword = async function (
   userPassword
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.updateLastLogin = function () {
+  this.lastLogin = new Date();
+  return this.save();
 };
 
 const UserModel = mongoose.model("User", userSchema);
