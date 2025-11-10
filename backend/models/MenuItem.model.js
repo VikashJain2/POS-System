@@ -45,11 +45,20 @@ const menuItemSchema = new mongoose.Schema(
       type: Number,
       default: 15,
     },
+
+    nutritionalInfo: {
+      calories: Number,
+      protein: Number,
+      carbs: Number,
+      fat: Number,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+menuItemSchema.index({ category: 1, isAvailable: 1 });
 
 const MenuItemModel = mongoose.model("MenuItem", menuItemSchema);
 export default MenuItemModel;

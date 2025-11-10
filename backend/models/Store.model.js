@@ -31,6 +31,20 @@ const storeSchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       ref: "User",
     },
+    settings: {
+      taxRate: {
+        type: Number,
+        default: 0.0
+      },
+      deliveryFee: {
+        type: Number,
+        default: 2.99
+      },
+      currency: {
+        type: String,
+        default: "INR"
+      }
+    }
   },
   {
     timestamps: true,

@@ -35,7 +35,7 @@ const orderAnalyticsSchema = new mongoose.Schema(
     },
     popularItems: [
       {
-        menuItems: {
+        menuItem: {
           type: mongoose.Types.ObjectId,
           ref: "MenuItem",
         },
