@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import orderAnalyticsModel from "../models/OrderAnalytics.model";
 import systemAnalyticsModel from "../models/SystemAnalytics.model";
 import BaseRepository from "./BaseRepository";
@@ -49,6 +50,58 @@ class AnalyticRepository extends BaseRepository {
         $lte: endDate,
       },
     });
+  }
+
+  async updateOrCreateSystemAnalytics(date, data) {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    return await systemAnalyticsModel.findOneAndUpdate(
+      {
+        date: {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        },
+      },
+      {
+        ...data,
+        date: startOfDay,
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+  }
+
+  async getRevenueTrends(storeId, days = 30) {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setHours(startDate.getDate() - days);
+
+    return await this.model.aggregate([
+      {
+        $match: {
+          store: new mongoose.Types.ObjectId(storeId),
+          date: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $project: {
+          date: 1,
+          totalRevenue: 1,
+          totalOrders: 1,
+          averageOrderValue: 1,
+        },
+      },
+      {
+        $sort: { date: 1 },
+      },
+    ]);
   }
 }
 

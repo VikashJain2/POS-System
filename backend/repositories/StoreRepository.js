@@ -8,7 +8,7 @@ class StoreRepository extends BaseRepository {
 
   async findByManager(managerId) {
     return await this.findOne({
-      managerId,
+      manager: managerId,
     });
   }
 

@@ -18,11 +18,13 @@ class InventoryService {
     return inventoryItem;
   }
 
-  async getLowStock(storeId) {
-    return await this.inventoryRepository.find({
-      store: storeId,
-      currentStock: { $lte: { $min: "$minimumStock" } },
-    });
+  async checkStock(itemId, requiredQuantity) {
+    const item = await this.inventoryRepository.findById(itemId);
+    return item && item.currentStock >= requiredQuantity;
+  }
+
+  async getLowStockItems(storeId) {
+    return await this.inventoryRepository.findLowStock(storeId);
   }
 
   async updateInventoryForOrder(orderItems, storeId) {
@@ -60,10 +62,14 @@ class InventoryService {
   }
 
   async getInventoryValue(storeId) {
-    const items = await this.inventoryRepository.find({ store: storeId });
-    return items.reduce((total, item) => {
-      return total + item.currentStock * item.costPerUnit;
-    }, 0);
+    return await this.inventoryRepository.getInventoryValue(storeId);
+  }
+
+  async getCategorySummary(storeId) {
+    return await this.inventoryRepository.getCategorySummary(storeId);
+  }
+  async getRestockSuggestions(storeId) {
+    return await this.inventoryRepository.getRestockSuggestions(storeId);
   }
 }
 

@@ -4,7 +4,7 @@ import StoreRepository from "../repositories/StoreRepository.js";
 class StoreService {
   constructor() {
     this.storeRepository = new StoreRepository();
-    this.orderRepository = new OrderRepository()
+    this.orderRepository = new OrderRepository();
   }
 
   async createStore(storeData) {
@@ -15,18 +15,30 @@ class StoreService {
       const store = await this.storeRepository.create(storeData);
       return store;
     } catch (error) {
+      if (error.code === 11000) {
+        throw new AppError("Store with this name already exists", 400);
+      }
       throw new Error(`Failed to create store: ${error.message}`, 500);
     }
   }
 
   async getStores(filters = {}) {
     try {
-      const { active } = filters;
+      const { active, withStats } = filters;
       let query = {};
 
       if (active !== undefined) query.isActive = active;
+      let stores = await this.storeRepository.find(query, ["manager"]);
+      if (withStats) {
+        stores = await Promise.all(
+          stores.map(async (store) => {
+            const stats = await this.storeRepository.getStoreStats(store._id);
+            return { ...store.toObject(), stats };
+          })
+        );
+      }
 
-      return await this.storeRepository.find(query, ["manager"]);
+      return stores;
     } catch (error) {
       throw new Error(`Failed to fetch stores: ${error.message}`, 500);
     }
@@ -63,11 +75,34 @@ class StoreService {
           startDate.setMonth(startDate.getMonth() - 1);
       }
 
-      const orders = await this.orderRepository.getOrdersByDateRange(storeId, startDate, endDate);
+      const performance = await this.storeRepository.getStorePerformace(
+        storeId,
+        startDate,
+        endDate
+      );
+      return performance;
+    } catch (error) {
+      throw new AppError(
+        `Failed to get store performance: ${error.message}`,
+        500
+      );
+    }
+  }
 
-      const performance = {
-        
-      }
-    } catch (error) {}
+  async getStoresWithPerformance(startDate, endDate) {
+    try {
+      const stores = await this.storeRepository.getStoresWithPerformace(
+        startDate,
+        endDate
+      );
+      return stores;
+    } catch (error) {
+      throw new AppError(
+        `Failed to get stores with performance: ${error.message}`,
+        500
+      );
+    }
   }
 }
+
+export default StoreService;

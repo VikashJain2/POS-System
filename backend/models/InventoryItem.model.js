@@ -39,6 +39,7 @@ const inventoryItemSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    lastUpdated: Date,
     supplier: String,
     lastRestocked: Date,
     store: {

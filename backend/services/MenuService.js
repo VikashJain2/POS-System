@@ -76,9 +76,7 @@ class MenuService {
 
   async getCategories() {
     try {
-      const categories = await this.menuItemRepository.model.distinct(
-        "category"
-      );
+      const categories = await this.menuItemRepository.getCategories();
       return categories;
     } catch (error) {
       throw new AppError(`Failed to fetch categories: ${error.message}`, 500);
